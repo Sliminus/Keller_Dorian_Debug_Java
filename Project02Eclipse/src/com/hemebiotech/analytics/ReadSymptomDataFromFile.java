@@ -3,8 +3,7 @@ package com.hemebiotech.analytics;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Simple brute force implementation
@@ -13,7 +12,8 @@ import java.util.List;
 public class ReadSymptomDataFromFile implements ISymptomReader {
 
 	private String filepath;
-	
+	// Utilisation d'une HashMap pour compter les occurrences
+	private Map<String, Integer> occurrences = new HashMap<>();
 	/**
 	 * 
 	 * @param filepath a full or partial path to file with symptom strings in it, one per line
@@ -23,25 +23,27 @@ public class ReadSymptomDataFromFile implements ISymptomReader {
 	}
 	
 	@Override
-	public List<String> GetSymptoms() {
-		ArrayList<String> result = new ArrayList<String>();
-		
-		if (filepath != null) {
-			try {
-				BufferedReader reader = new BufferedReader (new FileReader(filepath));
-				String line = reader.readLine();
-				
-				while (line != null) {
-					result.add(line);
-					line = reader.readLine();
+	public Map<String, Integer> GetSymptoms() {
+		try (BufferedReader reader = new BufferedReader(new FileReader(filepath))) {
+			String ligne;
+			while ((ligne = reader.readLine()) != null) {
+				ligne = ligne.trim(); // Supprimer les espaces inutiles
+				if (!ligne.isEmpty()) {
+					occurrences.put(ligne, occurrences.getOrDefault(ligne, 0) + 1);
 				}
-				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
+		} catch (IOException e) {
+			System.err.println("Erreur lors de la lecture du fichier : " + e.getMessage());
 		}
-		
-		return result;
+		return occurrences;
 	}
+
+	@Override
+	public List<String> sortSymptom() {
+		List<String> clesTriees = new ArrayList<>(occurrences.keySet());
+		Collections.sort(clesTriees);
+		return clesTriees;
+	}
+
 
 }
